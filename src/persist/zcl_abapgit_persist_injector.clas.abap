@@ -32,6 +32,10 @@ CLASS zcl_abapgit_persist_injector DEFINITION
       IMPORTING
         !ii_current_user TYPE REF TO zif_abapgit_persist_user.
 
+    CLASS-METHODS set_credentials
+      IMPORTING
+        !ii_credentials TYPE REF TO zif_abapgit_persist_creds.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -46,6 +50,13 @@ CLASS zcl_abapgit_persist_injector IMPLEMENTATION.
   METHOD set_background.
 
     zcl_abapgit_persist_factory=>gi_background = ii_background.
+
+  ENDMETHOD.
+
+
+  METHOD set_credentials.
+
+    zcl_abapgit_persist_factory=>gi_credentials = ii_credentials.
 
   ENDMETHOD.
 

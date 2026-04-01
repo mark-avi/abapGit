@@ -7,10 +7,12 @@ CLASS zcl_abapgit_password_dialog DEFINITION
 
     CLASS-METHODS popup
       IMPORTING
-        !iv_repo_url TYPE string
+        !iv_repo_url      TYPE string
+        !iv_allow_save    TYPE abap_bool DEFAULT abap_true
       CHANGING
-        !cv_user     TYPE string
-        !cv_pass     TYPE string
+        !cv_user          TYPE string
+        !cv_pass          TYPE string
+        !cv_save_password TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
   PROTECTED SECTION.
@@ -31,8 +33,8 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
       TRY.
           PERFORM password_popup
             IN PROGRAM (sy-cprog)
-            USING iv_repo_url
-            CHANGING cv_user cv_pass.
+            USING iv_repo_url iv_allow_save
+            CHANGING cv_user cv_pass cv_save_password.
         CATCH cx_sy_dyn_call_illegal_form INTO lx_error.
           " abapGit was called via API and either wrong or no username/password
           " was supplied. It's not possible to call abapGit password popup in
@@ -69,6 +71,8 @@ CLASS zcl_abapgit_password_dialog IMPLEMENTATION.
               RETURN.
           ENDTRY.
       ENDTRY.
+
+      CLEAR cv_save_password.
     ENDIF.
 
   ENDMETHOD.

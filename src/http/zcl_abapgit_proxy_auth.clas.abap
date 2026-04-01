@@ -24,12 +24,16 @@ CLASS ZCL_ABAPGIT_PROXY_AUTH IMPLEMENTATION.
 
   METHOD enter.
 
+    DATA lv_save TYPE abap_bool.
+
     zcl_abapgit_password_dialog=>popup(
       EXPORTING
-        iv_repo_url = 'Proxy Authentication'
+        iv_repo_url   = 'Proxy Authentication'
+        iv_allow_save = abap_false
       CHANGING
-        cv_user     = gv_username
-        cv_pass     = gv_password ).
+        cv_user          = gv_username
+        cv_pass          = gv_password
+        cv_save_password = lv_save ).
 
     IF gv_username IS INITIAL OR gv_password IS INITIAL.
       zcx_abapgit_exception=>raise( 'Proxy auth failed' ).
