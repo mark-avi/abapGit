@@ -17,6 +17,7 @@ CLASS ltcl_credentials DEFINITION
     METHODS set_and_get_password FOR TESTING RAISING zcx_abapgit_exception.
     METHODS ignore_mismatching_login FOR TESTING RAISING zcx_abapgit_exception.
     METHODS clear_password FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS stored_value_is_encrypted FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -88,6 +89,31 @@ CLASS ltcl_credentials IMPLEMENTATION.
               iv_url   = c_repo_url
               iv_login = c_login
               iv_user  = c_abap_user ) ).
+
+  ENDMETHOD.
+
+
+  METHOD stored_value_is_encrypted.
+
+    DATA ls_entry TYPE zabapgit_pwd.
+
+    mi_credentials->set_repo_password(
+      iv_url      = c_repo_url
+      iv_login    = c_login
+      iv_password = c_password
+      iv_user     = c_abap_user ).
+
+    SELECT SINGLE * FROM zabapgit_pwd
+      INTO ls_entry
+      WHERE mandt    = sy-mandt
+        AND uname    = c_abap_user
+        AND repo_url = c_repo_url.
+
+    cl_abap_unit_assert=>assert_not_initial( act = ls_entry-password ).
+
+    cl_abap_unit_assert=>assert_not_equals(
+      act = ls_entry-password
+      exp = c_password ).
 
   ENDMETHOD.
 ENDCLASS.
