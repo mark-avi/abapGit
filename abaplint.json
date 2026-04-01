@@ -96,7 +96,8 @@
         "INTF",
         "PROG",
         "TRAN",
-        "W3MI"
+        "W3MI",
+        "TABL"
       ]
     },
     "ambiguous_statement": true,

@@ -28,6 +28,9 @@ CLASS zcl_abapgit_persist_factory DEFINITION
         !iv_user       TYPE sy-uname DEFAULT sy-uname
       RETURNING
         VALUE(ri_user) TYPE REF TO zif_abapgit_persist_user.
+    CLASS-METHODS get_credentials
+      RETURNING
+        VALUE(ri_credentials) TYPE REF TO zif_abapgit_persist_creds.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -38,6 +41,7 @@ CLASS zcl_abapgit_persist_factory DEFINITION
     CLASS-DATA gi_background TYPE REF TO zif_abapgit_persist_background.
     CLASS-DATA gi_packages TYPE REF TO zif_abapgit_persist_packages.
     CLASS-DATA gi_current_user TYPE REF TO zif_abapgit_persist_user.
+    CLASS-DATA gi_credentials TYPE REF TO zif_abapgit_persist_creds.
 ENDCLASS.
 
 
@@ -52,6 +56,17 @@ CLASS zcl_abapgit_persist_factory IMPLEMENTATION.
     ENDIF.
 
     ri_background = gi_background.
+
+  ENDMETHOD.
+
+
+  METHOD get_credentials.
+
+    IF gi_credentials IS INITIAL.
+      CREATE OBJECT gi_credentials TYPE zcl_abapgit_persist_creds.
+    ENDIF.
+
+    ri_credentials = gi_credentials.
 
   ENDMETHOD.
 

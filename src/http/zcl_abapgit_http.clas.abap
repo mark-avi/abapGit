@@ -87,18 +87,28 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     DATA: lv_default_user TYPE string,
           lv_user         TYPE string,
           lv_pass         TYPE string,
-          lo_digest       TYPE REF TO zcl_abapgit_http_digest.
+          lo_digest       TYPE REF TO zcl_abapgit_http_digest,
+          lo_credentials  TYPE REF TO zif_abapgit_persist_creds,
+          lv_save_pass    TYPE abap_bool.
 
 
     lv_default_user = zcl_abapgit_persist_factory=>get_user( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
+    lo_credentials  = zcl_abapgit_persist_factory=>get_credentials( ).
+    lv_pass = lo_credentials->get_repo_password(
+      iv_url   = iv_url
+      iv_login = lv_user
+      iv_user  = sy-uname ).
+    lv_save_pass = boolc( lv_pass IS NOT INITIAL ).
 
     zcl_abapgit_password_dialog=>popup(
       EXPORTING
-        iv_repo_url     = iv_url
+        iv_repo_url      = iv_url
+        iv_allow_save    = abap_true
       CHANGING
-        cv_user         = lv_user
-        cv_pass         = lv_pass ).
+        cv_user          = lv_user
+        cv_pass          = lv_pass
+        cv_save_password = lv_save_pass ).
 
     IF lv_user IS INITIAL.
       zcx_abapgit_exception=>raise( 'Unauthorized access. Check your credentials' ).
@@ -108,6 +118,20 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       zcl_abapgit_persist_factory=>get_user( )->set_repo_login(
         iv_url   = iv_url
         iv_login = lv_user ).
+    ENDIF.
+
+    IF lv_save_pass = abap_true AND lv_pass IS NOT INITIAL.
+      lo_credentials->set_repo_password(
+        iv_url      = iv_url
+        iv_login    = lv_user
+        iv_password = lv_pass
+        iv_user     = sy-uname ).
+    ELSEIF lv_save_pass = abap_false.
+      lo_credentials->set_repo_password(
+        iv_url      = iv_url
+        iv_login    = lv_user
+        iv_password = ''
+        iv_user     = sy-uname ).
     ENDIF.
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).

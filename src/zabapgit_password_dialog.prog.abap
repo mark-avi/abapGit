@@ -19,6 +19,11 @@ PARAMETERS: p_pass TYPE c LENGTH 255 LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN SKIP.
 SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: p_save AS CHECKBOX DEFAULT ''.
+SELECTION-SCREEN COMMENT 3(30) sc_save FOR FIELD p_save.
+SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN SKIP.
+SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(18) sc_cmnt FOR FIELD p_cmnt.
 PARAMETERS: p_cmnt TYPE c LENGTH 255 LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
@@ -39,10 +44,12 @@ CLASS lcl_password_dialog DEFINITION FINAL.
 
     CLASS-METHODS popup
       IMPORTING
-        iv_repo_url TYPE string
+        iv_repo_url      TYPE string
+        iv_allow_save    TYPE abap_bool
       CHANGING
-        cv_user     TYPE string
-        cv_pass     TYPE string.
+        cv_user          TYPE string
+        cv_pass          TYPE string
+        cv_save_password TYPE abap_bool.
 
     CLASS-METHODS on_screen_init.
     CLASS-METHODS on_screen_output.
@@ -52,7 +59,8 @@ CLASS lcl_password_dialog DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    CLASS-DATA gv_confirm TYPE abap_bool.
+    CLASS-DATA gv_confirm    TYPE abap_bool.
+    CLASS-DATA gv_allow_save TYPE abap_bool.
     CLASS-METHODS enrich_title_by_hostname
       IMPORTING
         iv_repo_url TYPE string.
@@ -68,7 +76,9 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
+    p_save     = cv_save_password.
     gv_confirm = abap_false.
+    gv_allow_save = iv_allow_save.
 
     p_cmnt = 'Press F1 for Help'.
 
@@ -76,7 +86,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     ls_position = zcl_abapgit_popups=>center(
       iv_width  = 65
-      iv_height = 7 ).
+      iv_height = 10 ).
 
     CALL SELECTION-SCREEN c_dynnr
       STARTING AT ls_position-start_column ls_position-start_row
@@ -85,11 +95,12 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     IF gv_confirm = abap_true.
       cv_user = p_user.
       cv_pass = p_pass.
+      cv_save_password = p_save.
     ELSE.
-      CLEAR: cv_user, cv_pass.
+      CLEAR: cv_user, cv_pass, cv_save_password.
     ENDIF.
 
-    CLEAR: p_url, p_user, p_pass.
+    CLEAR: p_url, p_user, p_pass, p_save.
 
   ENDMETHOD.
 
@@ -98,6 +109,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     sc_url   = 'Repo URL'.
     sc_user  = 'User'.
     sc_pass  = 'Password or Token'.
+    sc_save  = 'Remember password'.
     sc_cmnt  = 'Note'.
   ENDMETHOD.
 
@@ -121,6 +133,16 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       ENDIF.
       IF screen-name = 'P_PASS'.
         screen-invisible = '1'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = 'P_SAVE' OR screen-name = 'SC_SAVE'.
+        IF gv_allow_save = abap_true.
+          screen-active    = '1'.
+          screen-invisible = '0'.
+        ELSE.
+          screen-active    = '0'.
+          screen-invisible = '1'.
+        ENDIF.
         MODIFY SCREEN.
       ENDIF.
     ENDLOOP.
@@ -178,16 +200,20 @@ ENDCLASS.
 
 FORM password_popup
       USING
-        pv_repo_url TYPE string
+        pv_repo_url   TYPE string
+        pv_allow_save TYPE abap_bool
       CHANGING
-        cv_user     TYPE string
-        cv_pass     TYPE string ##CALLED.
+        cv_user          TYPE string
+        cv_pass          TYPE string
+        cv_save_password TYPE abap_bool ##CALLED.
 
   lcl_password_dialog=>popup(
     EXPORTING
-      iv_repo_url     = pv_repo_url
+      iv_repo_url      = pv_repo_url
+      iv_allow_save    = pv_allow_save
     CHANGING
-      cv_user         = cv_user
-      cv_pass         = cv_pass ).
+      cv_user          = cv_user
+      cv_pass          = cv_pass
+      cv_save_password = cv_save_password ).
 
 ENDFORM.
