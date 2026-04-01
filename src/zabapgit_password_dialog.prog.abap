@@ -86,7 +86,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     ls_position = zcl_abapgit_popups=>center(
       iv_width  = 65
-      iv_height = 7 ).
+      iv_height = 10 ).
 
     CALL SELECTION-SCREEN c_dynnr
       STARTING AT ls_position-start_column ls_position-start_row

@@ -12,7 +12,7 @@ CLASS zcl_abapgit_password_dialog DEFINITION
       CHANGING
         !cv_user          TYPE string
         !cv_pass          TYPE string
-        !cv_save_password TYPE abap_bool
+        !cv_save_password TYPE abap_bool OPTIONAL
       RAISING
         zcx_abapgit_exception.
   PROTECTED SECTION.

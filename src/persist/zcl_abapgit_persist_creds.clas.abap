@@ -113,6 +113,8 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
     TRY.
         lv_value = cl_http_utility=>decode_x_base64( iv_value ).
       CATCH cx_root.
+        " Backward compatibility: treat non-Base64 values as plain-text passwords
+        rv_pass = iv_value.
         RETURN.
     ENDTRY.
 
