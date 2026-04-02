@@ -156,35 +156,46 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
 
   METHOD xor_with_key.
 
-    DATA: lv_key     TYPE xstring,
-          lv_key_len TYPE i,
-          lv_len     TYPE i,
-          lv_pos     TYPE i,
-          lv_key_pos TYPE i.
+    DATA: lv_key      TYPE xstring,
+          lv_key_len  TYPE i,
+          lv_len      TYPE i,
+          lv_pos      TYPE i,
+          lv_key_pos  TYPE i,
+          lr_data     TYPE REF TO data,
+          lr_key_data TYPE REF TO data.
 
-    FIELD-SYMBOLS: <lv_byte> TYPE x,
-                   <lv_key>  TYPE x.
-
-    rv_value = iv_value.
+    FIELD-SYMBOLS: <lv_data>     TYPE x,
+                   <lv_key_data> TYPE x,
+                   <lv_byte>     TYPE x,
+                   <lv_key>      TYPE x.
 
     lv_key = get_key( ).
     lv_key_len = xstrlen( lv_key ).
-    lv_len     = xstrlen( rv_value ).
+    lv_len     = xstrlen( iv_value ).
 
     IF lv_key_len = 0 OR lv_len = 0.
       zcx_abapgit_exception=>raise( 'Encryption key not available' ).
     ENDIF.
 
+    " Copy XSTRING into fixed-length X buffers so that byte-level offset
+    " notation is valid in ASSIGN (not supported directly on XSTRING)
+    CREATE DATA lr_data TYPE x LENGTH lv_len.
+    ASSIGN lr_data->* TO <lv_data>.
+    <lv_data> = iv_value.
+
+    CREATE DATA lr_key_data TYPE x LENGTH lv_key_len.
+    ASSIGN lr_key_data->* TO <lv_key_data>.
+    <lv_key_data> = lv_key.
+
     DO lv_len TIMES.
       lv_pos = sy-index - 1.
       lv_key_pos = lv_pos MOD lv_key_len.
-      ASSIGN rv_value+lv_pos(1) TO <lv_byte>.
-      ASSIGN lv_key+lv_key_pos(1) TO <lv_key>.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Encryption key not available' ).
-      ENDIF.
+      ASSIGN <lv_data>+lv_pos(1)         TO <lv_byte>.
+      ASSIGN <lv_key_data>+lv_key_pos(1) TO <lv_key>.
       <lv_byte> = <lv_byte> BIT-XOR <lv_key>.
     ENDDO.
+
+    rv_value = <lv_data>.
 
   ENDMETHOD.
 
