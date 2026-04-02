@@ -73,9 +73,9 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     DATA ls_position TYPE zif_abapgit_popups=>ty_popup_position.
 
-    CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
+    p_pass     = cv_pass.
     p_save     = cv_save_password.
     gv_confirm = abap_false.
     gv_allow_save = iv_allow_save.
