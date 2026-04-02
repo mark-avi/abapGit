@@ -246,7 +246,9 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    data(lv_login) = value ZABAPGIT_PWD-LOGIN( ).
+    lv_password = encrypt_password( iv_password ).
+
+    DATA(lv_login) = VALUE zabapgit_pwd-login( ).
     lv_login = iv_login.
 
     persist_password(
