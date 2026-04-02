@@ -110,7 +110,7 @@ CLASS ltcl_credentials IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_not_initial( act = ls_entry-password ).
 
-    cl_abap_unit_assert=>assert_not_equals(
+    cl_abap_unit_assert=>assert_differs(
       act = ls_entry-password
       exp = c_password ).
 
