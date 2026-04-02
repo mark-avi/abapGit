@@ -57,6 +57,18 @@ CLASS zcl_abapgit_http DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS try_saved_credentials
+      IMPORTING
+        !ii_client      TYPE REF TO if_http_client
+        !io_client      TYPE REF TO zcl_abapgit_http_client
+        !iv_url         TYPE string
+      EXPORTING
+        !ev_scheme      TYPE string
+      RETURNING
+        VALUE(rv_found) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+
     CLASS-METHODS get_http_client
       IMPORTING
         !iv_url          TYPE string
@@ -160,6 +172,45 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD try_saved_credentials.
+
+    DATA: lv_user   TYPE string,
+          lv_pass   TYPE string,
+          lo_digest TYPE REF TO zcl_abapgit_http_digest.
+
+    lv_user = zcl_abapgit_persist_factory=>get_user( )->get_repo_login( iv_url ).
+    lv_pass = zcl_abapgit_persist_factory=>get_credentials( )->get_repo_password(
+      iv_url   = iv_url
+      iv_login = lv_user
+      iv_user  = sy-uname ).
+
+    IF lv_pass IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_found = abap_true.
+
+    ev_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
+    FIND REGEX '^(\w+)' IN ev_scheme SUBMATCHES ev_scheme ##REGEX_POSIX.
+
+    CASE ev_scheme.
+      WHEN c_scheme-digest.
+        CREATE OBJECT lo_digest
+          EXPORTING
+            ii_client   = ii_client
+            iv_username = lv_user
+            iv_password = lv_pass.
+        lo_digest->run( ii_client ).
+        io_client->set_digest( lo_digest ).
+      WHEN OTHERS.
+        ii_client->authenticate(
+          username = lv_user
+          password = lv_pass ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD check_auth_requested.
 
     DATA: lv_code TYPE i.
@@ -229,10 +280,21 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
     ro_client->send_receive( ).
     IF check_auth_requested( li_client ) = abap_true.
-      lv_scheme = acquire_login_details( ii_client = li_client
-                                         io_client = ro_client
-                                         iv_url    = iv_url ).
-      ro_client->send_receive( ).
+      IF try_saved_credentials(
+             EXPORTING
+               ii_client = li_client
+               io_client = ro_client
+               iv_url    = iv_url
+             IMPORTING
+               ev_scheme = lv_scheme ) = abap_true.
+        ro_client->send_receive( ).
+      ENDIF.
+      IF check_auth_requested( li_client ) = abap_true.
+        lv_scheme = acquire_login_details( ii_client = li_client
+                                           io_client = ro_client
+                                           iv_url    = iv_url ).
+        ro_client->send_receive( ).
+      ENDIF.
     ENDIF.
     ro_client->check_http_200( ).
 
