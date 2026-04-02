@@ -84,12 +84,13 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
   METHOD acquire_login_details.
 
-    DATA: lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string,
-          lo_digest       TYPE REF TO zcl_abapgit_http_digest,
-          lo_credentials  TYPE REF TO zif_abapgit_persist_creds,
-          lv_save_pass    TYPE abap_bool.
+    DATA: lv_default_user  TYPE string,
+          lv_user          TYPE string,
+          lv_pass          TYPE string,
+          lv_original_pass TYPE string,
+          lo_digest        TYPE REF TO zcl_abapgit_http_digest,
+          lo_credentials   TYPE REF TO zif_abapgit_persist_creds,
+          lv_save_pass     TYPE abap_bool.
 
 
     lv_default_user = zcl_abapgit_persist_factory=>get_user( )->get_repo_login( iv_url ).
@@ -99,6 +100,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       iv_url   = iv_url
       iv_login = lv_user
       iv_user  = sy-uname ).
+    lv_original_pass = lv_pass.
     lv_save_pass = boolc( lv_pass IS NOT INITIAL ).
 
     zcl_abapgit_password_dialog=>popup(
@@ -120,7 +122,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
         iv_login = lv_user ).
     ENDIF.
 
-    IF lv_save_pass = abap_true AND lv_pass IS NOT INITIAL.
+    IF lv_save_pass = abap_true AND lv_pass IS NOT INITIAL AND lv_pass <> lv_original_pass.
       lo_credentials->set_repo_password(
         iv_url      = iv_url
         iv_login    = lv_user
