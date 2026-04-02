@@ -77,7 +77,6 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
 
     DATA: ls_entry TYPE zabapgit_pwd.
 
-    ls_entry-mandt    = sy-mandt.
     ls_entry-uname    = iv_user.
     ls_entry-repo_url = iv_url.
     ls_entry-login    = iv_login.
@@ -86,8 +85,7 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
     UPDATE (c_tabname)
       SET login    = ls_entry-login
           password = ls_entry-password
-      WHERE mandt    = ls_entry-mandt
-        AND uname    = ls_entry-uname
+      WHERE uname    = ls_entry-uname
         AND repo_url = ls_entry-repo_url.
 
     IF sy-subrc <> 0.
@@ -200,8 +198,7 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
 
     SELECT SINGLE * FROM zabapgit_pwd
       INTO ls_entry
-      WHERE mandt    = sy-mandt
-        AND uname    = iv_user
+      WHERE uname    = iv_user
         AND repo_url = lv_url.
 
     IF sy-subrc <> 0.
@@ -232,8 +229,7 @@ CLASS zcl_abapgit_persist_creds IMPLEMENTATION.
 
     IF iv_password IS INITIAL.
       DELETE FROM zabapgit_pwd
-        WHERE mandt    = sy-mandt
-          AND uname    = iv_user
+        WHERE uname    = iv_user
           AND repo_url = lv_url.
       COMMIT WORK AND WAIT.
       RETURN.
