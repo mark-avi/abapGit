@@ -13,7 +13,7 @@ CLASS ltcl_credentials DEFINITION
     DATA mi_credentials TYPE REF TO zif_abapgit_persist_creds.
 
     METHODS setup RAISING zcx_abapgit_exception.
-    METHODS teardown.
+    METHODS cleanup_test_data.
     METHODS set_and_get_password FOR TESTING RAISING zcx_abapgit_exception.
     METHODS ignore_mismatching_login FOR TESTING RAISING zcx_abapgit_exception.
     METHODS clear_password FOR TESTING RAISING zcx_abapgit_exception.
@@ -25,12 +25,12 @@ CLASS ltcl_credentials IMPLEMENTATION.
 
   METHOD setup.
     mi_credentials = zcl_abapgit_persist_factory=>get_credentials( ).
-    teardown( ).
+    cleanup_test_data( ).
   ENDMETHOD.
 
 
-  METHOD teardown.
-    DELETE FROM zabapgit_pwd WHERE mandt = sy-mandt AND uname = c_abap_user.
+  METHOD cleanup_test_data.
+    DELETE FROM zabapgit_pwd WHERE uname = c_abap_user.
     CALL FUNCTION 'DB_COMMIT'.
   ENDMETHOD.
 
@@ -105,8 +105,7 @@ CLASS ltcl_credentials IMPLEMENTATION.
 
     SELECT SINGLE * FROM zabapgit_pwd
       INTO ls_entry
-      WHERE mandt    = sy-mandt
-        AND uname    = c_abap_user
+      WHERE uname    = c_abap_user
         AND repo_url = c_repo_url.
 
     cl_abap_unit_assert=>assert_not_initial( act = ls_entry-password ).
